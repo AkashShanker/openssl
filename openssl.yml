@@ -6,6 +6,23 @@
     - vars.yml
 
   tasks:
+    - name: Install Pre-reqs
+      yum:
+        name: ['gcc', 'make']
+        state: present
+
+    - name: Create folders
+      file:
+        path: "{{ item }}"
+        state: directory
+        owner: root
+        group: root
+        mode: '0755'
+      with_items:
+        - "{{ openssl_base_path }}"
+        - "{{ openssl_install_path }}"
+        - "{{ openssl_base_path }}/openssl"
+
     - name: Download OpenSSL package
       get_url:
         url: https://github.com/openssl/openssl/archive/OpenSSL_1_1_1i.tar.gz
@@ -14,19 +31,28 @@
     - name: Untar the downloaded file
       unarchive:
         src: "{{ openssl_base_path }}/openssl-1.1.1i.tar.gz"
-        dest: "{{ opensll_base_path }}/openssl"
-        creates: "{{ opensll_base_path }}/openssl/README.md"
+        dest: "{{ openssl_base_path }}/openssl"
+        creates: "{{ openssl_base_path }}/openssl/README.md"
         remote_src: true
 
     - name: Configure
-      command: ./config --prefix="{{ opnessl_install_path }}"" \
-        --openssldir="{{ opnessl_install_path }}"" shared zlib
+      command: ./config --prefix="{{ openssl_install_path }}" \
+        --openssldir="{{ openssl_install_path }}" shared zlib
       args:
-        chdir: "{{ opensll_base_path }}/openssl"
-        creates: "{{ openssl_base_path }}/openssl/config.status"
+        chdir: "{{ openssl_base_path }}/openssl/openssl-OpenSSL_1_1_1i/"
+        creates: "{{ openssl_base_path }}/openssl/openssl-OpenSSL_1_1_1i/Makefile"
+
+    - name: Pause until you can verify updates to an application were successful
+      pause:
 
     - name: Make command
       command: make -j4
       args:
-        chdir: "{{ openssl_base_path }}/openssl"
-        creates: "{{ openssl_base_path }}/openssl/openssl"
+        chdir: "{{ openssl_base_path }}/openssl/openssl-OpenSSL_1_1_1i/"
+        creates: "{{ openssl_install_path }}"
+
+    - name: Make install
+      command: make install
+      args:
+        chdir: "{{ openssl_base_path }}/openssl/openssl-OpenSSL_1_1_1i/"
+        creates: "{{ openssl_install_path }}"
