@@ -1,0 +1,32 @@
+---
+# tasks file for openssl
+- hosts: all
+  gather_facts: false
+  vars_files:
+    - vars.yml
+
+  tasks:
+    - name: Download OpenSSL package
+      get_url:
+        url: https://github.com/openssl/openssl/archive/OpenSSL_1_1_1i.tar.gz
+        dest: "{{ openssl_base_path }}/openssl-1.1.1i.tar.gz"
+
+    - name: Untar the downloaded file
+      unarchive:
+        src: "{{ openssl_base_path }}/openssl-1.1.1i.tar.gz"
+        dest: "{{ opensll_base_path }}/openssl"
+        creates: "{{ opensll_base_path }}/openssl/README.md"
+        remote_src: true
+
+    - name: Configure
+      command: ./config --prefix="{{ opnessl_install_path }}"" \
+        --openssldir="{{ opnessl_install_path }}"" shared zlib
+      args:
+        chdir: "{{ opensll_base_path }}/openssl"
+        creates: "{{ openssl_base_path }}/openssl/config.status"
+
+    - name: Make command
+      command: make -j4
+      args:
+        chdir: "{{ openssl_base_path }}/openssl"
+        creates: "{{ openssl_base_path }}/openssl/openssl"
