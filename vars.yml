@@ -1,0 +1,3 @@
+---
+openssl_base_path: /usr/local/src/openssl_install
+openssl_install_path: /usr/local/ssl
